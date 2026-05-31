@@ -1,0 +1,8 @@
+.idea/
+vendor/
+node_modules/
+_data/
+*.log
+.DS_Store
+/dist/
+/modern_formats.zip
