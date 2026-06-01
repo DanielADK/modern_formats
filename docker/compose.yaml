@@ -20,7 +20,9 @@ services:
     volumes:
       - pwgconfig:/config
       # Mount the repo root as the plugin dir (named modern_formats, no hyphen).
-      - ../:/config/www/gallery/plugins/modern_formats:ro
+      # The linuxserver image serves Piwigo from /app/www/public, whose plugins/
+      # symlinks to /config/www/plugins — so that's the real mount target.
+      - ../:/config/www/plugins/modern_formats:ro
     depends_on:
       - db
 
