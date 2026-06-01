@@ -7,3 +7,4 @@ _data/
 /dist/
 /modern_formats.zip
 .phpunit.result.cache
+.playwright-mcp/
