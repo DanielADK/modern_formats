@@ -33,6 +33,10 @@ keeps photo metadata in its database).
 ```
 Upload via Admin → Plugins → Manage → Add, or extract into `plugins/modern_formats/`.
 
+## Translations
+
+Available in 21 languages. Corrections and new translations are welcome.
+
 ## License
 
 WTFPL — see [LICENSE](LICENSE).
