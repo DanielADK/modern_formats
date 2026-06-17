@@ -94,6 +94,49 @@ function modern_formats_cat_filter(?int $cat_id): array
     return [$join, $where];
 }
 
+// Image ids that failed to convert and are skipped for the rest of a bulk run
+// (a poison pill that always times out). Reset when a run starts (start_id 0).
+const MODERN_FORMATS_SKIPPED_PARAM = 'modern_formats_skipped';
+
+/** @return list<int> */
+function modern_formats_skipped_ids(): array
+{
+    $raw = safe_unserialize(conf_get_param(MODERN_FORMATS_SKIPPED_PARAM, ''));
+    if (!is_array($raw)) {
+        return [];
+    }
+    $ids = [];
+    foreach ($raw as $v) {
+        if (is_int($v)) {
+            $ids[] = $v;
+        }
+    }
+
+    return $ids;
+}
+
+function modern_formats_add_skipped(int $id): void
+{
+    $ids = modern_formats_skipped_ids();
+    if (!in_array($id, $ids, true)) {
+        $ids[] = $id;
+        conf_update_param(MODERN_FORMATS_SKIPPED_PARAM, $ids, true);
+    }
+}
+
+function modern_formats_clear_skipped(): void
+{
+    conf_update_param(MODERN_FORMATS_SKIPPED_PARAM, [], true);
+}
+
+// WHERE fragment excluding skipped ids; empty when none are skipped.
+function modern_formats_skipped_clause(): string
+{
+    $ids = modern_formats_skipped_ids();
+
+    return [] === $ids ? '' : ' AND i.id NOT IN ('.implode(',', $ids).')';
+}
+
 /**
  * @param list<string> $exts
  */
@@ -104,7 +147,7 @@ function modern_formats_count_pending(array $exts, ?int $cat_id = null): int
     }
     [$join, $cat_where] = modern_formats_cat_filter($cat_id);
     $query = 'SELECT COUNT(DISTINCT i.id) AS c FROM '.IMAGES_TABLE.' i'.$join
-        .' WHERE '.modern_formats_ext_clause($exts).$cat_where.';';
+        .' WHERE '.modern_formats_ext_clause($exts).$cat_where.modern_formats_skipped_clause().';';
     $row = pwg_db_fetch_assoc(pwg_query($query));
 
     return is_array($row) ? (int) $row['c'] : 0;
@@ -121,7 +164,7 @@ function modern_formats_pending_rows(int $start_id, int $limit, array $exts, ?in
         return [];
     }
     [$join, $cat_where] = modern_formats_cat_filter($cat_id);
-    $where = modern_formats_ext_clause($exts).$cat_where;
+    $where = modern_formats_ext_clause($exts).$cat_where.modern_formats_skipped_clause();
     if ($start_id > 0) {
         $where .= ' AND i.id < '.$start_id;
     }

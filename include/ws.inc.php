@@ -39,6 +39,19 @@ function modern_formats_add_ws_methods(array $arr): void
         '',
         ['admin_only' => true, 'post_only' => true]
     );
+
+    $service->addMethod(
+        'pwg.modernFormats.skip',
+        'ws_modern_formats_skip',
+        [
+            'start_id' => ['type' => WS_TYPE_INT | WS_TYPE_POSITIVE, 'default' => 0],
+            'cat_id' => ['type' => WS_TYPE_INT | WS_TYPE_POSITIVE, 'default' => 0],
+            'pwg_token' => [],
+        ],
+        'Skips the next pending photo (a poison pill that always times out) and returns a cursor.',
+        '',
+        ['admin_only' => true, 'post_only' => true]
+    );
 }
 
 /**
@@ -76,7 +89,11 @@ function ws_modern_formats_convert(array $params, PwgServer &$service)
     $limit = $params['limit'] ?? 50;
     $cat = $params['cat_id'] ?? 0;
     $cat_id = $cat > 0 ? $cat : null;
-    $rows = modern_formats_pending_rows($params['start_id'] ?? 0, $limit, $exts, $cat_id);
+    $start_id = $params['start_id'] ?? 0;
+    if (0 === $start_id) {
+        modern_formats_clear_skipped(); // fresh run: retry previously skipped photos
+    }
+    $rows = modern_formats_pending_rows($start_id, $limit, $exts, $cat_id);
 
     $encoder = new ModernFormats_PwgImageEncoder($cap['library']);
     $converter = new ModernFormats_Converter($encoder, $cfg, MODERN_FORMATS_BACKUP_DIR, modern_formats_make_copier());
@@ -123,6 +140,40 @@ function ws_modern_formats_convert(array $params, PwgServer &$service)
         'converted' => $converted,
         'errors' => $errors,
         'next_id' => $done ? null : $next_id,
+        'remaining' => modern_formats_count_pending($exts, $cat_id),
+    ];
+}
+
+/**
+ * Skip the next pending photo for the rest of this run (a poison pill the JS
+ * couldn't convert before the host's time limit), so the queue can advance.
+ *
+ * @param array{start_id?: int, cat_id?: int, pwg_token?: string} $params
+ *
+ * @return array{skipped: ?int, next_id: ?int, remaining: int}|PwgError
+ */
+function ws_modern_formats_skip(array $params, PwgServer &$service)
+{
+    if (get_pwg_token() !== ($params['pwg_token'] ?? '')) {
+        return new PwgError(403, 'Invalid security token');
+    }
+
+    $cfg = ModernFormats_Config::load();
+    $exts = ModernFormats_Config::enabled_exts($cfg);
+    $cat = $params['cat_id'] ?? 0;
+    $cat_id = $cat > 0 ? $cat : null;
+
+    $rows = modern_formats_pending_rows($params['start_id'] ?? 0, 1, $exts, $cat_id);
+    $skipped = null;
+    if ([] !== $rows) {
+        $skipped = (int) $rows[0]['id'];
+        modern_formats_add_skipped($skipped);
+        modern_formats_log('bulk: skipped image '.$skipped.' ('.$rows[0]['path'].') — could not convert within the time limit');
+    }
+
+    return [
+        'skipped' => $skipped,
+        'next_id' => $skipped, // continue below it (null => nothing left)
         'remaining' => modern_formats_count_pending($exts, $cat_id),
     ];
 }

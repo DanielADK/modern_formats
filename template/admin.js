@@ -60,9 +60,28 @@
         if (attempt < 5) {
           setTimeout(function () { step(startId, attempt + 1); }, 1000 * (attempt + 1));
         } else {
-          status.textContent = cfg.i18n.failed;
+          // Persistent failure: a photo that always times out (poison pill).
+          // Skip it server-side and continue past it.
+          skipOne(startId);
+        }
+      });
+  }
+
+  function skipOne(startId) {
+    ws('pwg.modernFormats.skip', { pwg_token: cfg.token, start_id: String(startId || 0) })
+      .then(function (res) {
+        if (res.skipped) { errorCount += 1; }
+        setProgress(res.remaining);
+        if (res.next_id) {
+          setTimeout(function () { step(res.next_id); }, 50);
+        } else {
+          status.textContent = errorCount > 0 ? cfg.i18n.doneErrors : cfg.i18n.done;
           btn.disabled = false;
         }
+      })
+      .catch(function () {
+        status.textContent = cfg.i18n.failed;
+        btn.disabled = false;
       });
   }
 
