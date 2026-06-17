@@ -30,7 +30,7 @@ $pending = modern_formats_count_pending(ModernFormats_Config::enabled_exts($cfg)
 // Album choices for scoped bulk conversion (0 = whole gallery). Indented by depth.
 $cats = [0 => l10n('All albums')];
 $cat_result = pwg_query('SELECT id, name, uppercats FROM '.CATEGORIES_TABLE.' ORDER BY global_rank ASC;');
-while (false !== ($cat = pwg_db_fetch_assoc($cat_result))) {
+while (is_array($cat = pwg_db_fetch_assoc($cat_result))) {
     $depth = substr_count($cat['uppercats'], ',');
     $name = trigger_change('render_category_name', $cat['name']);
     $cats[(int) $cat['id']] = str_repeat('   ', $depth).(is_string($name) ? $name : $cat['name']);

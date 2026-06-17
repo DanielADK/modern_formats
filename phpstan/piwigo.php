@@ -8,7 +8,7 @@ function pwg_query(string $query) {}
 
 /**
  * @param mixed $result
- * @return array<string,string>|false
+ * @return array<string,string>|null end-of-result yields null, not false
  */
 function pwg_db_fetch_assoc($result) {}
 

@@ -28,7 +28,7 @@ function modern_formats_update_image(int $image_id, string $old_rel_path, string
     $new_rel = (string) preg_replace('/\.[^.\/\\\]+$/', '.webp', $old_rel_path);
 
     $row = pwg_db_fetch_assoc(pwg_query('SELECT file FROM '.IMAGES_TABLE.' WHERE id = '.$image_id.';'));
-    $old_file = false !== $row ? $row['file'] : basename($old_rel_path);
+    $old_file = is_array($row) ? $row['file'] : basename($old_rel_path);
     $new_file = (string) preg_replace('/\.[^.\/\\\]+$/', '.webp', $old_file);
 
     single_update(
@@ -80,7 +80,7 @@ function modern_formats_cat_filter(?int $cat_id): array
     } else {
         $ids = [$cat_id];
         $res = pwg_query('SELECT id FROM '.CATEGORIES_TABLE." WHERE uppercats LIKE '%,".$cat_id.",%';");
-        while (false !== ($r = pwg_db_fetch_assoc($res))) {
+        while (is_array($r = pwg_db_fetch_assoc($res))) {
             $ids[] = (int) $r['id'];
         }
     }
@@ -107,7 +107,7 @@ function modern_formats_count_pending(array $exts, ?int $cat_id = null): int
         .' WHERE '.modern_formats_ext_clause($exts).$cat_where.';';
     $row = pwg_db_fetch_assoc(pwg_query($query));
 
-    return false === $row ? 0 : (int) $row['c'];
+    return is_array($row) ? (int) $row['c'] : 0;
 }
 
 /**
@@ -130,7 +130,7 @@ function modern_formats_pending_rows(int $start_id, int $limit, array $exts, ?in
 
     $rows = [];
     $result = pwg_query($query);
-    while (false !== ($row = pwg_db_fetch_assoc($result))) {
+    while (is_array($row = pwg_db_fetch_assoc($result))) {
         $rows[] = ['id' => $row['id'], 'path' => $row['path']];
     }
 
