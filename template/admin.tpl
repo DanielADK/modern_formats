@@ -41,7 +41,7 @@
       {'Convert existing photos'|@translate}
     </button>
   </p>
-  <div id="mfProgressWrap" style="display:none;background:#ddd;height:18px;width:100%;max-width:400px;">
+  <div id="mfProgressWrap" style="display:none;background:#ddd;height:18px;width:100%;max-width:400px;margin:0 auto;">
     <div id="mfProgressBar" style="background:#4a8;height:18px;width:0;"></div>
   </div>
   <p id="mfBulkStatus"></p>
