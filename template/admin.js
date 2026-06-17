@@ -3,12 +3,14 @@
   var btn = document.getElementById('mfBulkStart');
   if (!btn) return;
 
-  var wrap = document.getElementById('mfProgressWrap');
   var bar = document.getElementById('mfProgressBar');
   var status = document.getElementById('mfBulkStatus');
   var pending = document.getElementById('mfPending');
+  var album = document.getElementById('mfAlbum');
   var total = cfg.total || 0;
   var errorCount = 0;
+
+  function catId() { return album ? album.value : '0'; }
 
   function setProgress(remaining) {
     var doneCount = Math.max(0, total - remaining);
@@ -17,18 +19,31 @@
     if (pending) pending.textContent = remaining;
   }
 
-  function step(startId) {
+  function ws(method, fields) {
     var body = new FormData();
-    body.append('method', 'pwg.modernFormats.convert');
-    body.append('limit', '50');
-    body.append('pwg_token', cfg.token);
-    if (startId) body.append('start_id', String(startId));
-
-    fetch(cfg.wsUrl, { method: 'POST', body: body, credentials: 'same-origin' })
+    body.append('method', method);
+    body.append('cat_id', catId());
+    Object.keys(fields || {}).forEach(function (k) { body.append(k, fields[k]); });
+    return fetch(cfg.wsUrl, { method: 'POST', body: body, credentials: 'same-origin' })
       .then(function (r) { return r.json(); })
       .then(function (j) {
         if (!j || j.stat !== 'ok') { throw new Error('ws error'); }
-        var res = j.result;
+        return j.result;
+      });
+  }
+
+  function refreshPending() {
+    ws('pwg.modernFormats.getPending', {}).then(function (res) {
+      total = res.pending;
+      if (pending) pending.textContent = res.pending;
+      btn.disabled = !cfg.capOk || res.pending === 0;
+      status.textContent = '';
+    }).catch(function () {});
+  }
+
+  function step(startId) {
+    ws('pwg.modernFormats.convert', { limit: '50', pwg_token: cfg.token, start_id: String(startId || 0) })
+      .then(function (res) {
         if (res.errors && res.errors.length) { errorCount += res.errors.length; }
         setProgress(res.remaining);
         if (res.next_id) {
@@ -44,9 +59,13 @@
       });
   }
 
+  if (album) album.addEventListener('change', refreshPending);
+
   btn.addEventListener('click', function () {
     btn.disabled = true;
-    wrap.style.display = 'block';
+    document.getElementById('mfProgressWrap').style.display = 'block';
+    bar.style.width = '0';
+    errorCount = 0;
     status.textContent = cfg.i18n.running;
     step(0);
   });

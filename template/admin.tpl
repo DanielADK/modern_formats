@@ -17,6 +17,7 @@
     <p><label><input type="checkbox" name="auto_convert" {$MF_AUTO}> {'Convert new uploads automatically'|@translate}</label></p>
     <p><label><input type="checkbox" name="convert_jpeg" {$MF_JPEG}> {'Convert JPEG'|@translate}</label></p>
     <p><label><input type="checkbox" name="convert_png" {$MF_PNG}> {'Convert PNG'|@translate}</label></p>
+    <p><label><input type="checkbox" name="preserve_metadata" {$MF_META}> {'Preserve photo metadata (EXIF/IPTC/XMP)'|@translate}</label></p>
     <p>
       {'Original files'|@translate}:
       <label><input type="radio" name="backup_mode" value="keep" {if $MF_BACKUP eq 'keep'}checked="checked"{/if}> {'Keep a backup'|@translate}</label>
@@ -29,6 +30,11 @@
 
 <fieldset>
   <legend>{'Bulk conversion'|@translate}</legend>
+  <p>
+    <label>{'Album'|@translate}:
+      <select id="mfAlbum">{html_options options=$MF_CATS selected=0}</select>
+    </label>
+  </p>
   <p id="mfPendingLine">{'Photos pending conversion'|@translate}: <strong id="mfPending">{$MF_PENDING}</strong></p>
   <p>
     <button type="button" id="mfBulkStart"{if not $MF_CAP_OK or $MF_PENDING eq 0} disabled="disabled"{/if}>
@@ -46,6 +52,7 @@ window.MF_BULK = {
   wsUrl: "{$MF_WS_URL}",
   token: "{$PWG_TOKEN}",
   total: {$MF_PENDING},
+  capOk: {if $MF_CAP_OK}true{else}false{/if},
   i18n: {
     running: "{'Converting...'|@translate}",
     done: "{'Done.'|@translate}",
