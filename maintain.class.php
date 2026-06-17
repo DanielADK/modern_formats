@@ -46,6 +46,7 @@ class modern_formats_maintain extends PluginMaintain
         // Remove config only. Backups under _data are intentionally kept so
         // originals are never destroyed by uninstalling.
         conf_delete_param(ModernFormats_Config::PARAM);
+        conf_delete_param('modern_formats_skipped');
     }
 
     private function ensure_backup_dir(): void

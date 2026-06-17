@@ -41,10 +41,14 @@
       {'Convert existing photos'|@translate}
     </button>
   </p>
-  <div id="mfProgressWrap" style="display:none;background:#ddd;height:18px;width:100%;max-width:400px;">
+  <div id="mfProgressWrap" style="display:none;background:#ddd;height:18px;width:100%;max-width:400px;margin:0 auto;">
     <div id="mfProgressBar" style="background:#4a8;height:18px;width:0;"></div>
   </div>
   <p id="mfBulkStatus"></p>
+  <details id="mfFailures" style="display:none;margin-top:.5em;max-width:600px;">
+    <summary><span id="mfFailCount">0</span> {'photos could not be converted'|@translate}</summary>
+    <ul id="mfFailList" style="margin:.4em 0 0;font-size:.9em;"></ul>
+  </details>
 </fieldset>
 
 <script>
@@ -57,7 +61,9 @@ window.MF_BULK = {
     running: "{'Converting...'|@translate}",
     done: "{'Done.'|@translate}",
     failed: "{'Conversion failed.'|@translate}",
-    doneErrors: "{'Done, but some photos could not be converted (check logs).'|@translate}"
+    doneErrors: "{'Done, but some photos could not be converted (check logs).'|@translate}",
+    reasonError: "{'unreadable or unsupported'|@translate}",
+    reasonSkipped: "{'skipped (timed out)'|@translate}"
   }
 };
 </script>

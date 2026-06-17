@@ -21,4 +21,7 @@ $lang['Convert existing photos'] = 'Převést existující fotky';
 $lang['Converting...'] = 'Převádím...';
 $lang['Done.'] = 'Hotovo.';
 $lang['Done, but some photos could not be converted (check logs).'] = 'Hotovo, ale některé fotky se nepodařilo převést (viz logy).';
+$lang['photos could not be converted'] = 'fotek se nepodařilo převést';
+$lang['unreadable or unsupported'] = 'nečitelná nebo nepodporovaná';
+$lang['skipped (timed out)'] = 'přeskočeno (vypršel čas)';
 $lang['Conversion failed.'] = 'Převod selhal.';

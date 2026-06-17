@@ -7,8 +7,10 @@
   var status = document.getElementById('mfBulkStatus');
   var pending = document.getElementById('mfPending');
   var album = document.getElementById('mfAlbum');
+  var failuresBox = document.getElementById('mfFailures');
+  var failCount = document.getElementById('mfFailCount');
+  var failList = document.getElementById('mfFailList');
   var total = cfg.total || 0;
-  var errorCount = 0;
 
   function catId() { return album ? album.value : '0'; }
 
@@ -17,6 +19,19 @@
     var pct = total > 0 ? Math.round((doneCount / total) * 100) : 100;
     bar.style.width = pct + '%';
     if (pending) pending.textContent = remaining;
+  }
+
+  function addFailure(file, reason) {
+    var li = document.createElement('li');
+    li.textContent = (file || '?') + ' — ' + reason;
+    failList.appendChild(li);
+    failCount.textContent = failList.children.length;
+    failuresBox.style.display = 'block';
+  }
+
+  function finish() {
+    status.textContent = failList.children.length > 0 ? cfg.i18n.doneErrors : cfg.i18n.done;
+    btn.disabled = false;
   }
 
   function ws(method, fields) {
@@ -41,16 +56,40 @@
     }).catch(function () {});
   }
 
-  function step(startId) {
-    ws('pwg.modernFormats.convert', { limit: '50', pwg_token: cfg.token, start_id: String(startId || 0) })
+  function step(startId, attempt) {
+    attempt = attempt || 0;
+    ws('pwg.modernFormats.convert', { limit: '200', pwg_token: cfg.token, start_id: String(startId || 0) })
       .then(function (res) {
-        if (res.errors && res.errors.length) { errorCount += res.errors.length; }
+        (res.errors || []).forEach(function (e) { addFailure(e.file, cfg.i18n.reasonError); });
         setProgress(res.remaining);
         if (res.next_id) {
           setTimeout(function () { step(res.next_id); }, 50);
         } else {
-          status.textContent = errorCount > 0 ? cfg.i18n.doneErrors : cfg.i18n.done;
-          btn.disabled = false;
+          finish();
+        }
+      })
+      .catch(function () {
+        // The job is resumable, so retry the same cursor on a transient failure
+        // (timeout, network blip) before giving up.
+        if (attempt < 5) {
+          setTimeout(function () { step(startId, attempt + 1); }, 1000 * (attempt + 1));
+        } else {
+          // Persistent failure: a photo that always times out (poison pill).
+          // Skip it server-side and continue past it.
+          skipOne(startId);
+        }
+      });
+  }
+
+  function skipOne(startId) {
+    ws('pwg.modernFormats.skip', { pwg_token: cfg.token, start_id: String(startId || 0) })
+      .then(function (res) {
+        if (res.skipped) { addFailure(res.file, cfg.i18n.reasonSkipped); }
+        setProgress(res.remaining);
+        if (res.next_id) {
+          setTimeout(function () { step(res.next_id); }, 50);
+        } else {
+          finish();
         }
       })
       .catch(function () {
@@ -65,7 +104,9 @@
     btn.disabled = true;
     document.getElementById('mfProgressWrap').style.display = 'block';
     bar.style.width = '0';
-    errorCount = 0;
+    failList.innerHTML = '';
+    failCount.textContent = '0';
+    failuresBox.style.display = 'none';
     status.textContent = cfg.i18n.running;
     step(0);
   });
