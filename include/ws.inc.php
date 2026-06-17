@@ -71,7 +71,7 @@ function ws_modern_formats_get_pending(array $params, PwgServer &$service): arra
 /**
  * @param array{start_id?: int, limit?: int, cat_id?: int, pwg_token?: string} $params
  *
- * @return array{processed: int, converted: int, errors: list<int>, next_id: ?int, remaining: int}|PwgError
+ * @return array{processed: int, converted: int, errors: list<array{id: int, file: string}>, next_id: ?int, remaining: int}|PwgError
  */
 function ws_modern_formats_convert(array $params, PwgServer &$service)
 {
@@ -117,11 +117,11 @@ function ws_modern_formats_convert(array $params, PwgServer &$service)
                 modern_formats_update_image((int) $row['id'], $row['path'], $result->dest);
                 ++$converted;
             } elseif (ModernFormats_Result::ERROR === $result->status) {
-                $errors[] = (int) $row['id'];
+                $errors[] = ['id' => (int) $row['id'], 'file' => $row['file']];
                 modern_formats_log('bulk: could not convert image '.$row['id'].' ('.$row['path'].') — '.($encoder->lastError ?? 'unreadable or unsupported image'));
             }
         } catch (Throwable $e) {
-            $errors[] = (int) $row['id'];
+            $errors[] = ['id' => (int) $row['id'], 'file' => $row['file']];
             modern_formats_log('bulk: error on image '.$row['id'].' ('.$row['path'].') — '.$e->getMessage());
         }
         $next_id = (int) $row['id'];
@@ -150,7 +150,7 @@ function ws_modern_formats_convert(array $params, PwgServer &$service)
  *
  * @param array{start_id?: int, cat_id?: int, pwg_token?: string} $params
  *
- * @return array{skipped: ?int, next_id: ?int, remaining: int}|PwgError
+ * @return array{skipped: ?int, file: ?string, next_id: ?int, remaining: int}|PwgError
  */
 function ws_modern_formats_skip(array $params, PwgServer &$service)
 {
@@ -165,14 +165,17 @@ function ws_modern_formats_skip(array $params, PwgServer &$service)
 
     $rows = modern_formats_pending_rows($params['start_id'] ?? 0, 1, $exts, $cat_id);
     $skipped = null;
+    $file = null;
     if ([] !== $rows) {
         $skipped = (int) $rows[0]['id'];
+        $file = $rows[0]['file'];
         modern_formats_add_skipped($skipped);
         modern_formats_log('bulk: skipped image '.$skipped.' ('.$rows[0]['path'].') — could not convert within the time limit');
     }
 
     return [
         'skipped' => $skipped,
+        'file' => $file,
         'next_id' => $skipped, // continue below it (null => nothing left)
         'remaining' => modern_formats_count_pending($exts, $cat_id),
     ];

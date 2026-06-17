@@ -156,7 +156,7 @@ function modern_formats_count_pending(array $exts, ?int $cat_id = null): int
 /**
  * @param list<string> $exts
  *
- * @return list<array{id: string, path: string}>
+ * @return list<array{id: string, path: string, file: string}>
  */
 function modern_formats_pending_rows(int $start_id, int $limit, array $exts, ?int $cat_id = null): array
 {
@@ -168,13 +168,13 @@ function modern_formats_pending_rows(int $start_id, int $limit, array $exts, ?in
     if ($start_id > 0) {
         $where .= ' AND i.id < '.$start_id;
     }
-    $query = 'SELECT DISTINCT i.id, i.path FROM '.IMAGES_TABLE.' i'.$join
+    $query = 'SELECT DISTINCT i.id, i.path, i.file FROM '.IMAGES_TABLE.' i'.$join
         .' WHERE '.$where.' ORDER BY i.id DESC LIMIT '.$limit.';';
 
     $rows = [];
     $result = pwg_query($query);
     while (is_array($row = pwg_db_fetch_assoc($result))) {
-        $rows[] = ['id' => $row['id'], 'path' => $row['path']];
+        $rows[] = ['id' => $row['id'], 'path' => $row['path'], 'file' => $row['file']];
     }
 
     return $rows;

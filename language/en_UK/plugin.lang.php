@@ -21,4 +21,7 @@ $lang['Convert existing photos'] = 'Convert existing photos';
 $lang['Converting...'] = 'Converting...';
 $lang['Done.'] = 'Done.';
 $lang['Done, but some photos could not be converted (check logs).'] = 'Done, but some photos could not be converted (check logs).';
+$lang['photos could not be converted'] = 'photos could not be converted';
+$lang['unreadable or unsupported'] = 'unreadable or unsupported';
+$lang['skipped (timed out)'] = 'skipped (timed out)';
 $lang['Conversion failed.'] = 'Conversion failed.';
