@@ -23,15 +23,19 @@ function modern_formats_update_image(int $image_id, string $old_rel_path, string
     delete_element_derivatives(['path' => $old_rel_path]);
 
     $info = pwg_image_infos($new_abs_path); // width, height, filesize (kB)
-    // Swap only the extension on the stored path so the original './' / dir
-    // prefix style is preserved exactly (don't round-trip via absolute).
+    // Swap only the extension, preserving the dir-prefix style of `path` and the
+    // user's original `file` name (Piwigo keeps it distinct from the hashed path).
     $new_rel = (string) preg_replace('/\.[^.\/\\\]+$/', '.webp', $old_rel_path);
+
+    $row = pwg_db_fetch_assoc(pwg_query('SELECT file FROM '.IMAGES_TABLE.' WHERE id = '.$image_id.';'));
+    $old_file = false !== $row ? $row['file'] : basename($old_rel_path);
+    $new_file = (string) preg_replace('/\.[^.\/\\\]+$/', '.webp', $old_file);
 
     single_update(
         IMAGES_TABLE,
         [
             'path' => $new_rel,
-            'file' => basename($new_rel),
+            'file' => $new_file,
             'md5sum' => md5_file($new_abs_path),
             'filesize' => $info['filesize'],
             'width' => $info['width'],
