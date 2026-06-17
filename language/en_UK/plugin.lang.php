@@ -8,6 +8,7 @@ $lang['Convert new uploads automatically'] = 'Convert new uploads automatically'
 $lang['Convert JPEG'] = 'Convert JPEG';
 $lang['Convert PNG'] = 'Convert PNG';
 $lang['Preserve photo metadata (EXIF/IPTC/XMP)'] = 'Preserve photo metadata (EXIF/IPTC/XMP)';
+$lang['Requires ExifTool or Imagick, which were not found on this server.'] = 'Requires ExifTool or Imagick, which were not found on this server.';
 $lang['Original files'] = 'Original files';
 $lang['Keep a backup'] = 'Keep a backup';
 $lang['Delete (save space)'] = 'Delete (save space)';

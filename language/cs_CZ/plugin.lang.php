@@ -8,6 +8,7 @@ $lang['Convert new uploads automatically'] = 'Automaticky převádět nové nahr
 $lang['Convert JPEG'] = 'Převádět JPEG';
 $lang['Convert PNG'] = 'Převádět PNG';
 $lang['Preserve photo metadata (EXIF/IPTC/XMP)'] = 'Zachovat metadata fotek (EXIF/IPTC/XMP)';
+$lang['Requires ExifTool or Imagick, which were not found on this server.'] = 'Vyžaduje ExifTool nebo Imagick, které na serveru nebyly nalezeny.';
 $lang['Original files'] = 'Původní soubory';
 $lang['Keep a backup'] = 'Ponechat zálohu';
 $lang['Delete (save space)'] = 'Smazat (šetřit místo)';

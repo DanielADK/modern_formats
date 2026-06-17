@@ -139,3 +139,17 @@ function modern_formats_make_copier(): ModernFormats_MetadataCopier
 
     return new ModernFormats_NullCopier();
 }
+
+// Name of the available metadata backend, or null when none is (GD-only host
+// without ExifTool) — the "preserve metadata" option is then a no-op.
+function modern_formats_metadata_backend(): ?string
+{
+    if (ModernFormats_ExiftoolCopier::available()) {
+        return 'ExifTool';
+    }
+    if (ModernFormats_ImagickCopier::available()) {
+        return 'Imagick';
+    }
+
+    return null;
+}
