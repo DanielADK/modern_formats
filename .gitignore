@@ -7,5 +7,6 @@ _data/
 /dist/
 /modern_formats.zip
 .phpunit.result.cache
+.php-cs-fixer.cache
 .playwright-mcp/
 /screenshot.jpg

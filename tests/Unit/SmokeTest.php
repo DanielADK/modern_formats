@@ -1,10 +1,16 @@
 <?php
+
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @internal
+ *
+ * @coversNothing
+ */
 final class SmokeTest extends TestCase
 {
-    public function test_bootstrap_defines_root_path(): void
+    public function testBootstrapDefinesRootPath(): void
     {
-        $this->assertTrue(defined('PHPWG_ROOT_PATH'));
+        self::assertTrue(defined('PHPWG_ROOT_PATH'));
     }
 }

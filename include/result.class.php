@@ -1,11 +1,12 @@
 <?php
-if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
+
+if (!defined('PHPWG_ROOT_PATH')) exit('Hacking attempt!');
 
 final class ModernFormats_Result
 {
-    const CONVERTED = 'converted';
-    const SKIPPED   = 'skipped';
-    const ERROR     = 'error';
+    public const CONVERTED = 'converted';
+    public const SKIPPED = 'skipped';
+    public const ERROR = 'error';
 
     public function __construct(
         public readonly string $status,
@@ -16,6 +17,6 @@ final class ModernFormats_Result
 
     public function ok(): bool
     {
-        return $this->status === self::CONVERTED;
+        return self::CONVERTED === $this->status;
     }
 }

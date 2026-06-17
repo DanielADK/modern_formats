@@ -1,0 +1,22 @@
+includes:
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
+
+parameters:
+    level: max
+    paths:
+        - include
+        - admin.php
+        - main.inc.php
+        - maintain.class.php
+    # Piwigo core symbols: indexed for types, not analysed.
+    scanFiles:
+        - phpstan/piwigo.php
+    # Constants must be executed (define()) so they resolve during analysis.
+    bootstrapFiles:
+        - phpstan/constants.php
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: true
+    ignoreErrors:
+        # Plugin include paths are built from a runtime constant; the resolved
+        # path can't exist during static analysis.
+        - identifier: requireOnce.fileNotFound

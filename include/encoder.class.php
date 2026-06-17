@@ -1,5 +1,6 @@
 <?php
-if (!defined('PHPWG_ROOT_PATH')) die('Hacking attempt!');
+
+if (!defined('PHPWG_ROOT_PATH')) exit('Hacking attempt!');
 
 interface ModernFormats_Encoder
 {
@@ -20,6 +21,7 @@ final class ModernFormats_PwgImageEncoder implements ModernFormats_Encoder
     public function encode(string $src, string $dest, int $quality): bool
     {
         $this->lastError = null;
+
         try {
             $img = new pwg_image($src, $this->library);
             $img->set_compression_quality($quality);
@@ -27,17 +29,18 @@ final class ModernFormats_PwgImageEncoder implements ModernFormats_Encoder
             // Bake EXIF rotation into pixels; the DB row's rotation is then reset
             // to 0 (WebP carries no EXIF orientation, so this avoids double rotation).
             $angle = pwg_image::get_rotation_angle($src);
-            if (!empty($angle)) {
+            if (null !== $angle && 0 !== $angle) {
                 $img->rotate($angle);
             }
 
             $img->write($dest);
             $img->destroy();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->lastError = $e->getMessage();
             if (is_file($dest)) {
                 @unlink($dest);
             }
+
             return false;
         }
 
