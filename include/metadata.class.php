@@ -97,7 +97,7 @@ final class ModernFormats_ImagickCopier implements ModernFormats_MetadataCopier
         try {
             $from = new Imagick($src);
             $profiles = $from->getImageProfiles('*', true);
-            $from->destroy();
+            $from->clear();
             if ([] === $profiles) {
                 return false;
             }
@@ -109,7 +109,7 @@ final class ModernFormats_ImagickCopier implements ModernFormats_MetadataCopier
                 $to->setImageProfile($name, $blob);
             }
             $to->writeImage($dest);
-            $to->destroy();
+            $to->clear();
 
             return true;
         } catch (Throwable $e) {
