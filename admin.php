@@ -42,6 +42,7 @@ $template->assign([
     'MF_PNG' => $cfg['convert_png'] ? 'checked="checked"' : '',
     'MF_AUTO' => $cfg['auto_convert'] ? 'checked="checked"' : '',
     'MF_META' => $cfg['preserve_metadata'] ? 'checked="checked"' : '',
+    'MF_META_BACKEND' => modern_formats_metadata_backend(),
     'MF_BACKUP' => $cfg['backup_mode'],
     'MF_CATS' => $cats,
     'MF_CAP_OK' => $cap['ok'],

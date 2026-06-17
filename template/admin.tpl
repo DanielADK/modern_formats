@@ -17,7 +17,14 @@
     <p><label><input type="checkbox" name="auto_convert" {$MF_AUTO}> {'Convert new uploads automatically'|@translate}</label></p>
     <p><label><input type="checkbox" name="convert_jpeg" {$MF_JPEG}> {'Convert JPEG'|@translate}</label></p>
     <p><label><input type="checkbox" name="convert_png" {$MF_PNG}> {'Convert PNG'|@translate}</label></p>
-    <p><label><input type="checkbox" name="preserve_metadata" {$MF_META}> {'Preserve photo metadata (EXIF/IPTC/XMP)'|@translate}</label></p>
+    <p>
+      <label><input type="checkbox" name="preserve_metadata" {$MF_META}{if not $MF_META_BACKEND} disabled="disabled"{/if}> {'Preserve photo metadata (EXIF/IPTC/XMP)'|@translate}</label>
+      {if not $MF_META_BACKEND}
+        {* disabled inputs aren't submitted; keep the stored value via a hidden field *}
+        {if $MF_META}<input type="hidden" name="preserve_metadata" value="1">{/if}
+        <br><small style="color:#c00;">⚠ {'Requires ExifTool or Imagick, which were not found on this server.'|@translate}</small>
+      {/if}
+    </p>
     <p>
       {'Original files'|@translate}:
       <label><input type="radio" name="backup_mode" value="keep" {if $MF_BACKUP eq 'keep'}checked="checked"{/if}> {'Keep a backup'|@translate}</label>
