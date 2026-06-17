@@ -9,26 +9,26 @@ interface ModernFormats_MetadataCopier
 }
 
 // ExifTool backend — the only one that handles WebP's EXIF/XMP chunks reliably.
-// Needs exec(); on hosts where it's disabled, available() is false and the
-// factory falls back to the shell-free Imagick backend.
+// Runs via proc_open with an array argv (no shell); on hosts where proc_open is
+// disabled, available() is false and the factory falls back to Imagick.
 final class ModernFormats_ExiftoolCopier implements ModernFormats_MetadataCopier
 {
     public function __construct(private string $bin = 'exiftool') {}
 
     public static function available(): bool
     {
-        return self::exec_enabled() && null !== self::which('exiftool');
+        return self::proc_open_enabled() && null !== self::which('exiftool');
     }
 
-    // True only if exec() exists and isn't listed in disable_functions.
-    public static function exec_enabled(): bool
+    // True only if proc_open() exists and isn't listed in disable_functions.
+    public static function proc_open_enabled(): bool
     {
-        if (!function_exists('exec')) {
+        if (!function_exists('proc_open')) {
             return false;
         }
         $disabled = array_map('trim', explode(',', (string) ini_get('disable_functions')));
 
-        return !in_array('exec', $disabled, true);
+        return !in_array('proc_open', $disabled, true);
     }
 
     /**
@@ -58,16 +58,25 @@ final class ModernFormats_ExiftoolCopier implements ModernFormats_MetadataCopier
         if (!is_file($src) || !is_file($dest)) {
             return false;
         }
-        // Orientation excluded: rotation is already baked into the WebP pixels.
-        $cmd = escapeshellarg($this->bin)
-            .' -m -q -overwrite_original'
-            .' -TagsFromFile '.escapeshellarg($src)
-            .' -all:all --Orientation'
-            .' '.escapeshellarg($dest)
-            .' 2>/dev/null';
-        @exec($cmd, $out, $code);
+        // Array argv runs the binary directly (no shell). Orientation excluded:
+        // rotation is baked into the pixels.
+        $argv = [
+            $this->bin, '-m', '-q', '-overwrite_original',
+            '-TagsFromFile', $src,
+            '-all:all', '--Orientation',
+            $dest,
+        ];
+        $proc = @proc_open($argv, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+        if (!is_resource($proc)) {
+            return false;
+        }
+        // Drain pipes before closing so the child can't block on a full buffer.
+        stream_get_contents($pipes[1]);
+        stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
 
-        return 0 === $code;
+        return 0 === proc_close($proc);
     }
 }
 
