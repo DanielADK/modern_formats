@@ -41,8 +41,9 @@
     }).catch(function () {});
   }
 
-  function step(startId) {
-    ws('pwg.modernFormats.convert', { limit: '50', pwg_token: cfg.token, start_id: String(startId || 0) })
+  function step(startId, attempt) {
+    attempt = attempt || 0;
+    ws('pwg.modernFormats.convert', { limit: '200', pwg_token: cfg.token, start_id: String(startId || 0) })
       .then(function (res) {
         if (res.errors && res.errors.length) { errorCount += res.errors.length; }
         setProgress(res.remaining);
@@ -54,8 +55,14 @@
         }
       })
       .catch(function () {
-        status.textContent = cfg.i18n.failed;
-        btn.disabled = false;
+        // The job is resumable, so retry the same cursor on a transient failure
+        // (timeout, network blip) before giving up.
+        if (attempt < 5) {
+          setTimeout(function () { step(startId, attempt + 1); }, 1000 * (attempt + 1));
+        } else {
+          status.textContent = cfg.i18n.failed;
+          btn.disabled = false;
+        }
       });
   }
 

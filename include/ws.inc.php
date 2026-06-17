@@ -81,12 +81,18 @@ function ws_modern_formats_convert(array $params, PwgServer &$service)
     $encoder = new ModernFormats_PwgImageEncoder($cap['library']);
     $converter = new ModernFormats_Converter($encoder, $cfg, MODERN_FORMATS_BACKUP_DIR, modern_formats_make_copier());
 
+    // Process within a wall-clock budget so a request can't hit the host's
+    // max_execution_time mid-photo; the AJAX loop resumes from the cursor.
+    @set_time_limit(0);
+    $budget = ModernFormats_Batch::time_budget((int) ini_get('max_execution_time'));
+    $start = microtime(true);
+
     $converted = 0;
     $errors = [];
     $next_id = null;
+    $processed = 0;
     foreach ($rows as $row) {
         // Guard each photo: a single bad file must not abort the whole batch.
-        // $next_id still advances so the cursor makes progress past it.
         try {
             $src_abs = PHPWG_ROOT_PATH.preg_replace('#^\./#', '', $row['path']);
             $result = $converter->convert($src_abs);
@@ -102,13 +108,21 @@ function ws_modern_formats_convert(array $params, PwgServer &$service)
             modern_formats_log('bulk: error on image '.$row['id'].' ('.$row['path'].') — '.$e->getMessage());
         }
         $next_id = (int) $row['id'];
+        ++$processed;
+        if (microtime(true) - $start > $budget) {
+            break; // yield; the next request continues from $next_id
+        }
     }
 
+    // Done only when every fetched row was processed AND the fetch was short
+    // (end of table). A budget-induced early break leaves rows pending.
+    $done = $processed === count($rows) && count($rows) < $limit;
+
     return [
-        'processed' => count($rows),
+        'processed' => $processed,
         'converted' => $converted,
         'errors' => $errors,
-        'next_id' => count($rows) < $limit ? null : $next_id, // null => done
+        'next_id' => $done ? null : $next_id,
         'remaining' => modern_formats_count_pending($exts, $cat_id),
     ];
 }
