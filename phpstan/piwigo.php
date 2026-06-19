@@ -62,16 +62,27 @@ function check_status(int $level): void {}
 function load_language(string $filename, string $dirname = ''): bool {}
 
 /**
+ * @param mixed $default
+ *
+ * @return mixed
+ */
+function pwg_get_session_var(string $var, $default = null) {}
+
+/**
  * @param callable|string $callback
  * @return mixed
  */
 function add_event_handler(string $event, $callback, int $priority = 50, string $include_path = '') {}
 
 /**
- * @param mixed $data
- * @return mixed
+ * @template T
+ *
+ * @param T     $data
+ * @param mixed ...$args
+ *
+ * @return T
  */
-function trigger_change(string $event, $data = null) {}
+function trigger_change(string $event, $data = null, ...$args) {}
 
 class pwg_image
 {
@@ -109,6 +120,18 @@ class Template
     public function set_filename(string $handle, string $filename): void {}
 
     public function assign_var_from_handle(string $varname, string $handle): void {}
+
+    /**
+     * @param array<string,mixed>|string $value
+     */
+    public function append(string $tpl_var, $value = null, bool $merge = false): void {}
+}
+
+class SrcImage
+{
+    public function is_mimetype(): bool {}
+
+    public function get_path(): string {}
 }
 
 class Logger

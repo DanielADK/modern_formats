@@ -86,6 +86,32 @@ final class MetadataCopierTest extends TestCase
         self::assertSame('ACME', $make, 'other tags still copied');
     }
 
+    public function testExiftoolEmbedsIptcAsReadableXmp(): void
+    {
+        $this->requireGdWebp();
+        $bin = $this->exiftool();
+
+        // WebP has no place for legacy IPTC-IIM, so the copier must map IPTC to XMP;
+        // the reader recovers it as IPTC dataset codes.
+        $jpg = $this->dir.'/iptc.jpg';
+        $im = imagecreatetruecolor(32, 32);
+        imagejpeg($im, $jpg, 90);
+        $webp = $this->dir.'/iptc.webp';
+        imagewebp($im, $webp, 80);
+        imagedestroy($im);
+
+        exec(escapeshellarg($bin).' -overwrite_original -IPTC:By-line=Jane -IPTC:City=Berlin '
+            .'-IPTC:Keywords=alpha -IPTC:Keywords=beta '.escapeshellarg($jpg).' 2>/dev/null', $o, $code);
+        self::assertSame(0, $code, 'precondition: could not stamp IPTC on source jpeg');
+
+        self::assertTrue((new ModernFormats_ExiftoolCopier($bin))->copy($jpg, $webp));
+
+        $iptc = ModernFormats_WebpMetadataReader::iptc($webp);
+        self::assertSame('Jane', $iptc['2#080']);
+        self::assertSame('Berlin', $iptc['2#090']);
+        self::assertSame('alpha, beta', $iptc['2#025']);
+    }
+
     public function testNullCopierIsNoop(): void
     {
         self::assertFalse((new ModernFormats_NullCopier())->copy('a', 'b'));

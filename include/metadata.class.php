@@ -64,8 +64,13 @@ final class ModernFormats_ExiftoolCopier implements ModernFormats_MetadataCopier
             $this->bin, '-m', '-q', '-overwrite_original',
             '-TagsFromFile', $src,
             '-all:all', '--Orientation',
-            $dest,
         ];
+        // WebP has no slot for legacy IPTC-IIM, so map each IPTC field to its XMP
+        // equivalent (read back by ModernFormats_WebpMetadataReader on the picture page).
+        foreach (ModernFormats_WebpMetadataReader::IPTC_XMP as $m) {
+            $argv[] = '-XMP-'.$m['ns'].':'.$m['prop'].'<IPTC:'.$m['iptc'];
+        }
+        $argv[] = $dest;
         $proc = @proc_open($argv, [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
         if (!is_resource($proc)) {
             return false;

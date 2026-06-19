@@ -8,6 +8,8 @@ require_once __DIR__.'/encoder.class.php';
 
 require_once __DIR__.'/metadata.class.php';
 
+require_once __DIR__.'/metadata_reader.class.php';
+
 require_once __DIR__.'/capability.class.php';
 
 require_once __DIR__.'/config.class.php';

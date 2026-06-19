@@ -48,3 +48,21 @@ add_event_handler(
     EVENT_HANDLER_PRIORITY_NEUTRAL,
     MODERN_FORMATS_PATH.'include/ws.inc.php'
 );
+
+// Restore the picture-page EXIF panel for converted WebP: Piwigo's exif_read_data()
+// can't read WebP, so supply EXIF from the embedded chunk when its native read is empty.
+add_event_handler(
+    'format_exif_data',
+    'modern_formats_format_exif_data',
+    EVENT_HANDLER_PRIORITY_NEUTRAL,
+    MODERN_FORMATS_PATH.'include/display.inc.php'
+);
+
+// Restore the picture-page IPTC panel for converted WebP: Piwigo's IPTC reader is
+// JPEG-only with no seam, so append the panel from the embedded XMP.
+add_event_handler(
+    'loc_end_picture',
+    'modern_formats_picture_iptc',
+    EVENT_HANDLER_PRIORITY_NEUTRAL,
+    MODERN_FORMATS_PATH.'include/display.inc.php'
+);

@@ -4,7 +4,9 @@
   "license": "WTFPL",
   "type": "piwigo-plugin",
   "require": {
-    "php": ">=8.2"
+    "php": ">=8.2",
+    "ext-libxml": "*",
+    "ext-dom": "*"
   },
   "suggest": {
     "ext-gd": "WebP encoding (GD built with WebP support)",
