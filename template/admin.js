@@ -40,20 +40,27 @@
     body.append('cat_id', catId());
     Object.keys(fields || {}).forEach(function (k) { body.append(k, fields[k]); });
     return fetch(cfg.wsUrl, { method: 'POST', body: body, credentials: 'same-origin' })
-      .then(function (r) { return r.json(); })
-      .then(function (j) {
-        if (!j || j.stat !== 'ok') { throw new Error('ws error'); }
-        return j.result;
+      .then(function (r) {
+        return r.text().then(function (text) {
+          var j;
+          try { j = JSON.parse(text); } catch (e) {
+            throw new Error('HTTP ' + r.status + ': ' + text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 300));
+          }
+          if (!j || j.stat !== 'ok') { throw new Error(j && j.message ? j.message : 'web service error (' + r.status + ')'); }
+          return j.result;
+        });
       });
   }
 
+  function showError(e) { status.textContent = (cfg.i18n.failed || 'Error') + ' ' + (e && e.message ? e.message : e); }
+
   function refreshPending() {
+    status.textContent = '';
     ws('pwg.modernFormats.getPending', {}).then(function (res) {
       total = res.pending;
       if (pending) pending.textContent = res.pending;
       btn.disabled = !cfg.capOk || res.pending === 0;
-      status.textContent = '';
-    }).catch(function () {});
+    }).catch(showError);
   }
 
   function step(startId, attempt) {
@@ -68,14 +75,15 @@
           finish();
         }
       })
-      .catch(function () {
+      .catch(function (e) {
         // The job is resumable, so retry the same cursor on a transient failure
         // (timeout, network blip) before giving up.
         if (attempt < 5) {
           setTimeout(function () { step(startId, attempt + 1); }, 1000 * (attempt + 1));
         } else {
-          // Persistent failure: a photo that always times out (poison pill).
-          // Skip it server-side and continue past it.
+          // Persistent failure: surface the error, then treat the row as a poison
+          // pill (always times out) — skip it server-side and continue past it.
+          showError(e);
           skipOne(startId);
         }
       });
