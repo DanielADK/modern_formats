@@ -49,7 +49,8 @@ $template->assign([
     'MF_CAP_REASON' => $cap['reason'],
     'MF_PENDING' => $pending,
     'MF_WS_URL' => get_root_url().'ws.php?format=json',
-    'MF_JS' => MODERN_FORMATS_URL.'template/admin.js',
+    // admin.js versioning
+    'MF_JS' => MODERN_FORMATS_URL.'template/admin.js?v='.(@filemtime(MODERN_FORMATS_PATH.'template/admin.js') ?: 0),
     'PWG_TOKEN' => get_pwg_token(),
 ]);
 
