@@ -36,6 +36,10 @@ while (is_array($cat = pwg_db_fetch_assoc($cat_result))) {
     $cats[(int) $cat['id']] = str_repeat('   ', $depth).(is_string($name) ? $name : $cat['name']);
 }
 
+// Cache-bust admin.js by its mtime (0 if the file can't be stat'd).
+$js_mtime = @filemtime(MODERN_FORMATS_PATH.'template/admin.js');
+$js_ver = false !== $js_mtime ? $js_mtime : 0;
+
 $template->assign([
     'MF_QUALITY' => $cfg['quality'],
     'MF_JPEG' => $cfg['convert_jpeg'] ? 'checked="checked"' : '',
@@ -50,7 +54,7 @@ $template->assign([
     'MF_PENDING' => $pending,
     'MF_WS_URL' => get_root_url().'ws.php?format=json',
     // admin.js versioning
-    'MF_JS' => MODERN_FORMATS_URL.'template/admin.js?v='.(@filemtime(MODERN_FORMATS_PATH.'template/admin.js') ?: 0),
+    'MF_JS' => MODERN_FORMATS_URL.'template/admin.js?v='.$js_ver,
     'PWG_TOKEN' => get_pwg_token(),
 ]);
 
