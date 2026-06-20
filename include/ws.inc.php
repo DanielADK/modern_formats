@@ -98,10 +98,9 @@ function ws_modern_formats_convert(array $params, PwgServer &$service)
     $encoder = new ModernFormats_PwgImageEncoder($cap['library']);
     $converter = new ModernFormats_Converter($encoder, $cfg, MODERN_FORMATS_BACKUP_DIR, modern_formats_make_copier());
 
-    // Process within a wall-clock budget so a request can't hit the host's
-    // max_execution_time mid-photo; the AJAX loop resumes from the cursor.
-    @set_time_limit(0);
+    // Read the limit before set_time_limit(0) zeroes it, then lift it.
     $budget = ModernFormats_Batch::time_budget((int) ini_get('max_execution_time'));
+    @set_time_limit(0);
     $start = microtime(true);
 
     $converted = 0;

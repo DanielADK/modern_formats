@@ -4,24 +4,19 @@ if (!defined('PHPWG_ROOT_PATH')) exit('Hacking attempt!');
 
 final class ModernFormats_Batch
 {
-    // Fraction of the PHP execution limit a single bulk request may use before
-    // returning its cursor; the rest of the limit is headroom for the in-flight
-    // photo plus request teardown.
+    // Fraction of max_execution_time a chunk may use; the rest is headroom.
     private const FRACTION = 0.7;
-
-    // Floor (always leave room for at least one slow photo) and the cap used when
-    // the host reports no execution limit (0/negative).
+    // Clamp: floor leaves room for one slow photo, ceiling stays under gateway timeouts.
     private const FLOOR = 10.0;
-    private const UNLIMITED_CAP = 30.0;
+    private const CEILING = 30.0;
 
-    // Wall-clock seconds a bulk request should process before yielding to the
-    // next AJAX step, derived from max_execution_time.
+    // Per-chunk wall-clock budget, clamped to [FLOOR, CEILING].
     public static function time_budget(int $max_execution_time): float
     {
         if ($max_execution_time <= 0) {
-            return self::UNLIMITED_CAP;
+            return self::CEILING;
         }
 
-        return max(self::FLOOR, $max_execution_time * self::FRACTION);
+        return min(self::CEILING, max(self::FLOOR, $max_execution_time * self::FRACTION));
     }
 }
