@@ -9,7 +9,12 @@ permissions:
   contents: write
 
 jobs:
+  # Gate the release on the same tests + static analysis as CI.
+  checks:
+    uses: ./.github/workflows/checks.yml
+
   release:
+    needs: checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
